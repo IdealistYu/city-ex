@@ -1,5 +1,6 @@
 // 入口：地图与视图切换（全国 ⇄ 省）、路由、标记交互、侧栏
 // 其余界面各自成模块：picker.js（等级弹窗）、locator.js（搜索定位）、image-ui.js（保存图片）、backup-ui.js（数据备份）
+import { inject } from '@vercel/analytics';
 import './card.css';
 import { LEVELS, levelOf, levelButtons, tally } from './levels.js';
 import { getLevel, setLevel, allLevels, onChange } from './store.js';
@@ -23,6 +24,9 @@ const PROV_LABEL_ZOOM = 2; // 全国视图放大到几倍后显示省名、换�
 const MAX_ZOOM = { country: 12, province: 4 }; // 相对 home 视图的最大放大倍数
 
 // ---------- 初始化 ----------
+// Vercel Web Analytics
+inject();
+
 for (const l of LEVELS) if (l.value) root.style.setProperty(`--l${l.value}`, l.color);
 
 buildMap(svg);
