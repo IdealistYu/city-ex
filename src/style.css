@@ -1,0 +1,404 @@
+/* 得意黑子集（改名 CityEx Sans，见 scripts/build-font.mjs） */
+@font-face {
+  font-family: 'CityEx Sans';
+  src: url('/fonts/cityex-sans.woff2') format('woff2');
+  font-display: swap;
+}
+
+/* ============ 变量 ============ */
+:root {
+  --bg: #f3efe6;           /* 页面与海面 */
+  --land: #ffffff;         /* 未标记的城市 */
+  --ink: #222;             /* 文字、粗边框、国界 */
+  --muted: #6b665c;        /* 次要文字 */
+  --panel: rgba(255, 255, 255, .92);
+  --paper: #fbf9f4;        /* 南海插图卡片底色 */
+  --soft: #f7f4ee;         /* 对话框里的说明底色 */
+  --hover: #f4f1ea;        /* 白底按钮的悬停色 */
+  --shadow: rgba(0, 0, 0, .12);
+  --focus: #3b82f6;
+  --accent: #e0402a;       /* 聚焦城市的闪烁描边 */
+  --danger: #b4452f;
+  /* 地图与 UI 同一套线条层级：粗黑轮廓（同卡片边框）› 细黑省界 › 米灰市界（同卡片分隔线） */
+  --line-city: #d8d2c4;
+  --line-city-active: #cfc8b8;
+  --line-province: #222;
+  --divider: var(--line-city);
+  /* 省视图里淡化的邻省 */
+  --dim: #f5f2eb;
+  --dim-line: #e7e2d7;
+  /* 等级颜色 --l1…--l5 由 main.js 从 levels.js 写入，只在一处定义 */
+  --font: 'CityEx Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+  --panel-w: 264px;
+  --gap: 16px;
+  color-scheme: light;
+}
+
+/* ============ 基础 ============ */
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+/* 触屏：禁止整页双指缩放与回弹 / 下拉刷新（地图自己处理缩放），否则固定布局会错乱 */
+html { touch-action: pan-x pan-y; overscroll-behavior: none; }
+body { overscroll-behavior: none; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.4 var(--font);
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:disabled { cursor: progress; opacity: .7; }
+[hidden] { display: none !important; }
+/* 自定义样式的按钮统一给出键盘焦点框（鼠标点击不显示） */
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.noscript { margin: 40vh 16px 0; text-align: center; }
+[data-busy] { cursor: wait; }
+[data-busy] body { pointer-events: none; }
+
+/* ============ 通用组件 ============ */
+/* 主按钮：粗边框 + 硬投影 */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  padding: 6px 12px; border: 2px solid var(--ink); border-radius: 6px; background: #fff;
+  box-shadow: 2px 3px 0 var(--shadow);
+}
+.btn.primary { background: var(--ink); color: #fff; }
+.btn:active { transform: translateY(1px); box-shadow: none; }
+.btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.btn svg.solid { fill: currentColor; stroke: none; }
+.btn { color: var(--ink); text-decoration: none; }
+.icon-btn { justify-content: center; width: 38px; padding: 0; }
+
+/* 标签式小按钮：画笔、城市列表、定位菜单、备份。--c 为等级色，没有时白底 */
+#brush button, #city-list button, .loc-grid button, .loc-head button, .loc-list button, .backup button {
+  border: 1.5px solid var(--ink); border-radius: 5px; background: var(--c, #fff);
+}
+
+/* 对话框（导入、导出）：与卡片同款 */
+dialog {
+  width: min(420px, calc(100vw - 32px)); padding: 18px 18px 16px;
+  border: 2px solid var(--ink); border-radius: 12px; background: #fff; color: var(--ink);
+  box-shadow: 3px 5px 0 var(--shadow);
+}
+dialog::backdrop { background: rgba(34, 34, 34, .35); }
+dialog h2 { margin: 0 0 10px; font-size: 20px; }
+dialog p { margin: 0 0 10px; font-size: 14px; }
+dialog .skipped { color: var(--danger); font-size: 13px; max-height: 6em; overflow-y: auto; }
+dialog .modes { margin: 0 0 14px; padding: 10px 12px; list-style: none; background: var(--soft); border-radius: 8px; font-size: 13px; color: var(--muted); }
+dialog .modes li + li { margin-top: 4px; }
+dialog .modes b { margin-right: 8px; color: var(--ink); }
+dialog textarea {
+  width: 100%; margin-bottom: 12px; padding: 8px; resize: vertical;
+  border: 1.5px solid var(--divider); border-radius: 6px; font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace;
+}
+dialog .actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* 提示条 */
+#toast {
+  position: fixed; z-index: 30; left: 50%; bottom: max(24px, env(safe-area-inset-bottom));
+  transform: translateX(-50%); max-width: calc(100vw - 32px);
+  padding: 8px 14px; border-radius: 8px; background: var(--ink); color: #fff; font-size: 14px;
+  box-shadow: 3px 5px 0 var(--shadow);
+}
+
+/* ============ 布局 ============ */
+#stage { position: fixed; inset: 0; }
+#map { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+/* 面板内的滚动到头时不带动页面 */
+.locator-body, #city-list, #brush .options, dialog { overscroll-behavior: contain; }
+
+/* ---------- 顶栏：面包屑 · 搜索 · 保存 ---------- */
+#topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 3;
+  display: flex; align-items: center; gap: 14px;
+  padding: max(12px, env(safe-area-inset-top)) max(var(--gap), env(safe-area-inset-right)) 16px max(var(--gap), env(safe-area-inset-left));
+  pointer-events: none;
+  /* 放大后地图文字会滑到顶栏下，垫一层渐隐底色 */
+  background: linear-gradient(var(--bg) 60%, color-mix(in srgb, var(--bg) 0%, transparent));
+}
+#topbar > * { pointer-events: auto; }
+#crumb { display: flex; align-items: baseline; gap: 6px; min-width: 0; white-space: nowrap; }
+.crumb-root { border: 0; background: none; padding: 0; font-size: 26px; font-weight: bold; letter-spacing: 1px; }
+#crumb-province { display: inline-flex; align-items: baseline; gap: 6px; font-size: 22px; min-width: 0; }
+#crumb-province .sep { color: var(--muted); }
+.crumb-leaf {
+  border: 0; background: none; padding: 0; font: inherit; font-weight: bold;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* 在省视图时，根节点是可点击的"返回" */
+[data-view="province"] .crumb-root { color: var(--muted); font-size: 20px; }
+
+.search {
+  display: flex; align-items: center; gap: 8px; flex: 0 1 300px; min-width: 0;
+  padding: 0 12px; height: 38px; border: 2px solid var(--ink); border-radius: 8px; background: #fff;
+  color: var(--muted); cursor: text;
+}
+.search svg { flex: none; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.search input { flex: 1; min-width: 0; border: 0; outline: none; background: none; font: inherit; color: var(--ink); }
+.search input::placeholder { color: var(--muted); }
+.search[aria-expanded="true"] { box-shadow: 0 0 0 3px var(--l3); color: var(--ink); }
+/* 顶栏控件统一 38px 高；GitHub 与保存图片靠右 */
+#topbar .btn { height: 38px; }
+#repo { margin-left: auto; }
+#repo + #save { margin-left: -6px; } /* 两个按钮间距收紧为 8px，视觉上成组 */
+
+/* ---------- 侧栏：宽屏省视图在右侧，宽屏全国视图在左下，窄屏在底部 ---------- */
+#panel {
+  position: fixed; z-index: 2; top: 72px; right: max(var(--gap), env(safe-area-inset-right)); width: var(--panel-w);
+  max-height: calc(100vh - 72px - var(--gap));
+  max-height: calc(100dvh - 72px - var(--gap)); /* 手机浏览器地址栏伸缩时按实际可见高度 */
+  display: flex; flex-direction: column; overflow: hidden;
+  border: 2px solid var(--ink); border-radius: 10px;
+  background: var(--panel); backdrop-filter: blur(6px);
+  box-shadow: 3px 5px 0 rgba(0, 0, 0, .08);
+}
+#panel section { display: flex; flex-direction: column; gap: 12px; padding: 14px; min-height: 0; }
+
+/* 全国统计 */
+.score-line { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.score b { font-size: 40px; line-height: 1; }
+.score span { margin-left: 4px; color: var(--muted); }
+#visited { color: var(--muted); font-size: 14px; }
+#visited b { color: var(--ink); }
+#level-stats { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+#level-stats li { display: grid; grid-template-columns: 16px 1fr auto; align-items: center; gap: 8px; }
+#level-stats i { width: 16px; height: 16px; border-radius: 4px; background: var(--c); border: 1.5px solid var(--ink); }
+#level-stats small { margin-left: 6px; color: var(--muted); font-size: 12px; }
+#level-stats b { font-size: 16px; }
+.tip { margin: 0; padding-top: 10px; border-top: 1.5px dashed var(--divider); color: var(--muted); font-size: 13px; }
+
+/* 数据备份 */
+.backup { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.backup span { flex: 1; }
+.backup button { padding: 2px 8px; font-size: 12px; color: var(--ink); }
+
+/* 省视图：本省进度、画笔、城市列表 */
+.province-head { display: flex; flex-direction: column; gap: 2px; }
+.province-head h2 { margin: 0; font-size: 22px; }
+#province-progress { color: var(--muted); font-size: 14px; }
+#brush { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+#brush .label { flex: none; white-space: nowrap; color: var(--muted); }
+#brush .label small { margin-left: 6px; font-size: 12px; opacity: .8; }
+#brush .options, #city-list { display: flex; flex-wrap: wrap; gap: 5px; }
+#brush button, #city-list button { padding: 3px 7px; font-size: 13px; }
+#brush button.active { outline: 3px solid var(--ink); outline-offset: 1px; }
+#city-list { align-content: flex-start; overflow-y: auto; padding-top: 10px; border-top: 1.5px dashed var(--divider); }
+
+/* ---------- 定位菜单 ---------- */
+#locator {
+  position: fixed; z-index: 5; top: 60px; left: 16px; width: 380px; max-height: min(72vh, 640px);
+  display: flex; flex-direction: column; overflow: hidden;
+  background: #fff; border: 2px solid var(--ink); border-radius: 8px;
+  box-shadow: 3px 6px 0 var(--shadow);
+}
+.locator-body { overflow-y: auto; padding: 10px 10px 12px; }
+.locator-body section + section { margin-top: 8px; }
+.locator-body h3 { margin: 4px 0; font-size: 13px; font-weight: normal; color: var(--muted); }
+.loc-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.loc-grid button { display: inline-flex; align-items: baseline; gap: 4px; padding: 4px 8px; font-size: 14px; }
+.loc-grid small, .loc-list small { color: var(--muted); font-size: 11px; }
+.loc-head { position: sticky; top: 0; display: flex; align-items: center; gap: 8px; padding: 2px 0 8px; background: #fff; }
+.loc-head b { flex: 1; font-size: 17px; }
+.loc-head button { padding: 3px 8px; font-size: 13px; }
+.loc-list { display: flex; flex-direction: column; gap: 4px; }
+.loc-list button { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 10px; text-align: left; }
+.loc-list b { font-weight: normal; }
+.loc-empty { color: var(--muted); font-size: 14px; }
+
+/* ---------- 等级选择弹窗 ---------- */
+#picker {
+  position: fixed; z-index: 10; width: 140px; overflow: hidden;
+  background: #fff; border: 2px solid var(--ink); border-radius: 10px;
+  box-shadow: 3px 5px 0 var(--shadow);
+}
+#picker h2 {
+  margin: 0; padding: 6px 8px; font-size: 18px; font-weight: normal; text-align: center;
+  background: var(--c, #fff); border-bottom: 2px solid var(--ink);
+}
+#picker .options button { display: block; width: 100%; padding: 6px 10px; border: 0; background: var(--c); }
+#picker .options button.current { font-weight: bold; box-shadow: inset 4px 0 0 var(--ink); }
+
+/* ---------- 导出结果 ---------- */
+#output {
+  position: fixed; inset: 0; z-index: 20; padding: 16px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  background: rgba(255, 255, 255, .96);
+}
+#output img { max-width: min(100%, 720px); max-height: 75vh; box-shadow: 0 5px 20px var(--shadow); }
+#output p { margin: 0; color: var(--muted); }
+
+/* ============ 地图 ============ */
+#map path { vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.sea { fill: var(--bg); }
+
+/* 城市：按等级上色；--c 记下自身颜色，供描边与淡化使用 */
+.unit { fill: var(--land); stroke: var(--line-city); stroke-width: .6px; transition: fill .2s, opacity .4s; }
+.unit[data-level="5"] { fill: var(--l5); --c: var(--l5); }
+.unit[data-level="4"] { fill: var(--l4); --c: var(--l4); }
+.unit[data-level="3"] { fill: var(--l3); --c: var(--l3); }
+.unit[data-level="2"] { fill: var(--l2); --c: var(--l2); }
+.unit[data-level="1"] { fill: var(--l1); --c: var(--l1); }
+/* 全国视图（未放大）不画城市分界：描边与填充同色，既隐藏分界又不会在相邻色块间露出抗锯齿缝。
+   省视图、全国视图放大后恢复城市分界线 */
+[data-view="country"] #map:not(.zoomed) .unit { stroke: var(--c, var(--land)); }
+[data-view="country"] .prov { cursor: pointer; }
+
+/* 省视图：淡化邻省（用浅色填充而不是半透明，否则底下的投影会透上来发灰） */
+[data-view="province"] .prov:not(.active) .unit { fill: var(--dim); stroke: var(--dim-line); }
+[data-view="province"] .prov:not(.active) .unit[data-level] { fill: color-mix(in srgb, var(--c) 35%, var(--dim)); }
+[data-view="province"] .prov.active .unit { cursor: pointer; stroke-width: 1px; stroke: var(--line-city-active); }
+
+/* 聚焦城市时的闪烁描边 */
+.unit.flash { animation: flash 1.8s ease-out; }
+@keyframes flash {
+  0%, 20%, 45% { stroke: var(--accent); stroke-width: 4px; }
+  10%, 35% { stroke: var(--accent); stroke-width: 1px; }
+  100% { stroke-width: 1px; }
+}
+
+/* 边界线 */
+.line-province { fill: none; stroke: var(--line-province); stroke-width: 1px; pointer-events: none; }
+.line-country { fill: none; stroke: var(--ink); stroke-width: 2px; pointer-events: none; }
+
+/* 南海诸岛插图：只做显示；省视图隐藏 */
+.inset { transition: opacity .4s; pointer-events: none; }
+.inset-bg { fill: var(--paper); }
+.inset-frame { fill: none; stroke: var(--ink); stroke-width: 2px; }
+.inset-title { font-size: 12px; text-anchor: end; fill: var(--muted); }
+.inset .unit { stroke-width: .3px; }
+.inset .line-province { stroke-width: .6px; }
+.inset .line-country { stroke-width: 1px; }
+/* 九段线：原数据是一组细长色块，加同色描边单独加粗 */
+.jd { fill: var(--ink); stroke: var(--ink); stroke-width: 1.6px; stroke-linecap: round; }
+[data-view="province"] .inset { opacity: 0; }
+
+/* 城市名：只在省视图显示当前省；非当前省不参与绘制 */
+.labels g { visibility: hidden; }
+[data-view="province"] .labels g.active { visibility: visible; }
+.labels text {
+  font-size: var(--label-size, 10px);
+  text-anchor: middle; dominant-baseline: central;
+  fill: var(--ink);
+  paint-order: stroke; stroke: rgba(255, 255, 255, .8); stroke-width: .25em; stroke-linejoin: round;
+  pointer-events: none;
+  opacity: 0; transition: opacity .3s;
+}
+[data-view="province"] .labels .active text { opacity: 1; transition-delay: .35s; }
+
+/* 省名：全国视图放大后显示 */
+.prov-labels { visibility: hidden; }
+[data-view="country"] #map.zoomed .prov-labels { visibility: visible; }
+.prov-labels text {
+  font-size: var(--prov-label-size, 14px);
+  text-anchor: middle; dominant-baseline: central;
+  fill: var(--ink);
+  paint-order: stroke; stroke: rgba(255, 255, 255, .85); stroke-width: .3em; stroke-linejoin: round;
+  pointer-events: none;
+  opacity: 0; transition: opacity .3s;
+}
+[data-view="country"] #map.zoomed .prov-labels text { opacity: 1; }
+
+/* ============ 悬停（仅限有悬停能力的设备，触屏点过后不会卡在高亮状态） ============ */
+@media (hover: hover) {
+  [data-view="province"] .crumb-root:hover { color: var(--ink); text-decoration: underline; }
+  .backup button:hover { background: var(--hover); }
+  .loc-grid button:hover, .loc-list button:hover, .loc-head button:hover { filter: brightness(.94); }
+  #picker .options button:hover { filter: brightness(.95); }
+  [data-view="country"] .prov:hover .unit { filter: brightness(.93); }
+  [data-view="province"] .prov.active .unit:hover { filter: brightness(.93); }
+}
+
+/* ============ 响应式 ============ */
+/* 宽屏全国视图：统计卡片放在左下角的地图空白区 */
+@media (min-width: 701px) {
+  [data-view="country"] #panel { top: auto; bottom: var(--gap); left: max(var(--gap), env(safe-area-inset-left)); right: auto; width: 236px; }
+  [data-view="country"] #panel section { padding: 12px 14px; gap: 10px; }
+  [data-view="country"] .score b { font-size: 34px; }
+}
+
+/* 窄屏（与 dom.js 的 narrowScreen 一致） */
+@media (max-width: 700px) {
+  :root { --gap: 8px; }
+
+  /* 顶栏：搜索平时只是图标，展开时占满顶栏并隐藏面包屑与保存 */
+  #topbar { gap: 8px; padding-left: 12px; padding-right: 12px; }
+  .crumb-root { font-size: 20px; }
+  [data-view="province"] .crumb-root { font-size: 15px; }
+  #crumb-province { font-size: 18px; }
+  .search { flex: none; width: 38px; padding: 0 8px; margin-left: auto; cursor: pointer; }
+  .search input { width: 0; }
+  #topbar.searching #crumb, #topbar.searching #save { display: none; }
+  #topbar.searching .search { flex: 1; width: auto; }
+  #save { flex: none; justify-content: center; width: 38px; padding: 0; }
+  #save span { display: none; }
+
+  /* 侧栏在底部 */
+  #panel {
+    top: auto; left: var(--gap); right: var(--gap); bottom: max(var(--gap), env(safe-area-inset-bottom));
+    width: auto; max-height: 38vh; max-height: 38dvh;
+  }
+  #panel section { padding: 10px 12px; gap: 8px; }
+  /* 统计：一行分数 + 一行等级计数 */
+  .score b { font-size: 28px; }
+  #level-stats { flex-direction: row; flex-wrap: wrap; gap: 6px 10px; }
+  #level-stats li { grid-template-columns: 12px auto auto; gap: 4px; font-size: 13px; }
+  #level-stats i { width: 12px; height: 12px; }
+  #level-stats small, .tip { display: none; }
+  .backup span { font-size: 11px; }
+  /* 省视图：画笔与城市列表横向滚动 */
+  .province-head { flex-direction: row; align-items: baseline; justify-content: space-between; }
+  .province-head h2 { font-size: 17px; }
+  #brush { flex-direction: row; align-items: center; }
+  #brush .label small { display: none; }
+  #brush .options, #city-list { flex-wrap: nowrap; overflow-x: auto; }
+  #brush button, #city-list button { flex: none; }
+  #city-list { overflow-y: hidden; padding-bottom: 2px; }
+  /* 横向滚动的列表：右侧渐隐，提示还能往后滑 */
+  #brush .options, #city-list {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+    padding-right: 20px; scrollbar-width: none;
+  }
+  #brush .options::-webkit-scrollbar, #city-list::-webkit-scrollbar { display: none; }
+
+  #locator { left: 8px !important; right: 8px; width: auto; max-height: 72vh; }
+}
+
+/* 横屏手机等矮屏：顶栏、侧栏收紧，统计只保留数字 */
+@media (min-width: 701px) and (max-height: 520px) {
+  #topbar { padding-top: max(8px, env(safe-area-inset-top)); padding-bottom: 10px; }
+  .crumb-root { font-size: 22px; }
+  #panel { top: 58px; width: 230px; max-height: calc(100vh - 58px - var(--gap)); max-height: calc(100dvh - 58px - var(--gap)); }
+  #panel section, [data-view="country"] #panel section { padding: 10px 12px; gap: 8px; }
+  [data-view] .score b { font-size: 26px; }
+  #level-stats { gap: 3px; }
+  #level-stats small, .tip, #brush .label small { display: none; }
+  .province-head h2 { font-size: 18px; }
+  /* 等级菜单改为两列，高度减半，避免在矮屏里放不下 */
+  #picker { width: 230px; }
+  #picker .options { display: grid; grid-template-columns: 1fr 1fr; }
+}
+
+/* 手机、平板等触屏设备：不显示 GitHub 入口 */
+@media (max-width: 700px), (hover: none) and (pointer: coarse) {
+  #repo { display: none; }
+  #repo + #save { margin-left: 0; }
+}
+
+/* 触屏：加大点击区域（接近 44px 的建议尺寸）；输入框至少 16px，否则 iOS 聚焦时会放大整个页面 */
+@media (pointer: coarse) {
+  .search input, dialog textarea { font-size: 16px; }
+  #picker { width: 150px; }
+  #picker .options button { padding: 10px; }
+  #brush button, #city-list button { padding: 6px 11px; }
+  .backup button { padding: 5px 12px; font-size: 13px; }
+  .loc-grid button { padding: 7px 10px; }
+  .loc-head button { padding: 6px 10px; }
+  .loc-list button { padding: 10px 12px; }
+}
+
+/* ============ 减少动态效果 ============ */
+@media (prefers-reduced-motion: reduce) {
+  .unit.flash { animation: none; stroke: var(--accent); stroke-width: 3px; }
+  .unit, .labels text, .prov-labels text, .inset { transition: none; }
+}

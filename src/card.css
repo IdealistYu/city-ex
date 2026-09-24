@@ -1,0 +1,10 @@
+/*
+ * 地图的卡片效果：和 UI 卡片同款的硬投影（偏移 3px/5px、不模糊）。页面与导出图共用（export.js 以 ?raw 引入）。
+ * 偏移写成「屏幕像素 × --k」，--k 为当前视图每像素对应的 viewBox 单位（map.js 的 setScale 维护），
+ * 这样无论放大多少倍，投影在屏幕上都保持同样的距离。
+ */
+svg { --k: 1; }
+.map-shadow, .inset-shadow {
+  fill: rgba(0, 0, 0, .12); stroke: none; pointer-events: none;
+  transform: translate(calc(var(--k) * 3px), calc(var(--k) * 5px));
+}

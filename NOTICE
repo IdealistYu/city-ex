@@ -1,0 +1,12 @@
+第三方素材 / Third-party materials
+
+The MIT License in LICENSE applies to the source code of this project. The following
+third-party materials included in this repository are distributed under their
+own terms:
+
+- public/fonts/cityex-sans.woff2: a subset of Smiley Sans (得意黑) by
+  atelierAnchor, renamed to "CityEx Sans" as required by its Reserved Font Name
+  clause. Licensed under the SIL Open Font License 1.1; see public/fonts/OFL.txt.
+- src/map-data.json, src/map-fine.json: derived from boundary data published by
+  Alibaba DataV GeoAtlas (https://datav.aliyun.com/portal/school/atlas/area_selector),
+  which remains subject to its provider's terms.
