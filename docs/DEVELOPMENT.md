@@ -53,7 +53,8 @@ src/
   picker.js        等级选择弹窗
   locator.js       搜索与定位菜单
   image-ui.js      "保存图片"按钮与结果弹层
-  export.js        生成 PNG（独立 SVG + 内联样式与字体 → canvas）
+  export.js        全国图，以及共用的 SVG → PNG 流程（图形走 SVG，文字用 canvas 以页面字体绘制）
+  export-province.js  单省"XX制霸"竖图：城市名自动避让与引线、全制霸印章、竖版位置小图
   backup-ui.js     数据备份界面：导出 / 导入 JSON
   backup.js        备份文件格式与宽容解析
   store.js         标记数据（localStorage，以行政区划代码为 key，多标签页同步）

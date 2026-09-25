@@ -292,6 +292,7 @@ const data = {
   units: unitsOut,
   lines: linesOf(levels.coarse, true),
   outline: outlineOf(levels.coarse),
+  jd: toD(jd.geometry, main), // 九段线（主图坐标，位于主图范围以南；供竖版缩略图使用）
   inset: {
     box: insetBox.map(r1),
     units: insetUnits,

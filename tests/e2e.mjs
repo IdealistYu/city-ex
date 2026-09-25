@@ -328,6 +328,33 @@ test('保存图片：下载 PNG、弹层 Esc / 点背景关闭', async (page, h)
   expect(await page.evaluate(() => document.querySelector('#output').hidden), '点背景应关闭弹层');
 });
 
+test('单省导出：按钮随视图切换，导出 3:4 竖图', async (page, h) => {
+  await h.open('', { 320100: 3, 320500: 5 });
+  expect((await page.textContent('#save span')) === '保存全国图', '全国视图按钮应为"保存全国图"');
+  await h.open('#/320000');
+  expect((await page.textContent('#save span')) === '保存江苏图', '省视图按钮应为"保存江苏图"');
+  const dl = page.waitForEvent('download');
+  await page.click('#save');
+  const file = await dl;
+  expect(file.suggestedFilename() === '城市制霸-江苏.png', `文件名不对：${file.suggestedFilename()}`);
+  const size = await page.evaluate(() => new Promise(r => { const i = document.querySelector('#output img'); const f = () => r([i.naturalWidth, i.naturalHeight]); i.complete ? f() : i.onload = f; }));
+  expect(size[0] === 2160 && size[1] === 2880, `尺寸应为 2160×2880：${size}`);
+  await page.keyboard.press('Escape');
+  await page.goBack();
+  await wait(1000);
+  expect((await page.textContent('#save span')) === '保存全国图', '回到全国后按钮应恢复');
+});
+
+test('单省导出：海南（含三沙插图）与新疆（引线最多）都能生成', async (page, h) => {
+  for (const [code, name] of [['460000', '海南'], ['650000', '新疆']]) {
+    await h.open(`#/${code}`, { 460300: 3, 650100: 5 });
+    const dl = page.waitForEvent('download');
+    await page.click('#save');
+    expect((await dl).suggestedFilename() === `城市制霸-${name}.png`, `${name}导出失败`);
+    await page.keyboard.press('Escape');
+  }
+});
+
 // ---------- 数据备份 ----------
 test('备份：导出可读的 JSON', async (page, h) => {
   await h.open('', { 440100: 3, 330100: 5 });

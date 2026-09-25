@@ -11,7 +11,7 @@ import {
 import { attachGestures } from './gesture.js';
 import { createLocator } from './locator.js';
 import { openPicker, closePicker, isPickerOpen, pickerContains } from './picker.js';
-import { isOutputOpen, closeOutput } from './image-ui.js';
+import { isOutputOpen, closeOutput, setExportTarget } from './image-ui.js';
 import './backup-ui.js';
 import { $, narrowScreen } from './dom.js';
 
@@ -212,6 +212,7 @@ const enterProvince = async code => {
   renderCityList(code);
   renderStats();
   syncTitles();
+  setExportTarget(code);
   home = provinceFit(code);
   await flyTo();
 };
@@ -226,6 +227,7 @@ const showCountry = async () => {
   $('#province').hidden = true;
   for (const g of svg.querySelectorAll('.active')) g.classList.remove('active');
   syncTitles();
+  setExportTarget(null);
   home = countryFit();
   await flyTo();
 };

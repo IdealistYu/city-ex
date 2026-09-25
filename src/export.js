@@ -1,4 +1,4 @@
-// 导出全国视图 PNG：独立构建一份 SVG（内联样式）→ <img> → canvas
+// 导出 PNG：SVG 文本（内联样式与字体）→ <img> → canvas。全国图在这里生成，单省图见 export-province.js
 import { LEVELS, tally } from './levels.js';
 import CARD_STYLE from './card.css?raw';
 import { buildMap, paint, setDetail, hasFine, units, FULL_VIEW } from './map.js';
@@ -7,21 +7,8 @@ import { esc } from './dom.js';
 
 const SCALE = 2;
 const FONT = `'CityEx Sans','PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans CJK SC',sans-serif`;
-const FONT_URL = `${import.meta.env.BASE_URL}fonts/cityex-sans.woff2`;
 
-// SVG 作为 <img> 渲染时不能加载外部资源，字体需转成 data URL 内联
-let fontFace = null;
-const loadFontFace = () => fontFace ??= fetch(FONT_URL)
-  .then(res => { if (!res.ok) throw new Error(res.status); return res.blob(); })
-  .then(blob => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(`@font-face{font-family:'CityEx Sans';src:url(${reader.result}) format('woff2')}`);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  }))
-  .catch(() => (fontFace = null, '')); // 取不到字体就用系统字体导出
-
-const BG = '#f3efe6';
+export const BG = '#f3efe6';
 
 const STYLE = `
 .sea{fill:${BG}}
@@ -38,6 +25,100 @@ ${LEVELS.filter(l => l.value).map(l => `.unit[data-level="${l.value}"]{fill:${l.
 .jd{fill:#222;stroke:#222;stroke-width:1.2;stroke-linecap:round}
 text{font-family:${FONT};fill:#222}
 `;
+
+// ---------- 文字另行绘制 ----------
+// SVG 作为图片渲染时，内联字体是异步加载的，最先排版的文字可能已经用了备用字体（且不会重排）。
+// 因此文字不交给 SVG 渲染：先把 SVG 放进页面，读出每段文字的位置、字号、颜色、变换，
+// 从 SVG 里删掉文字，图形部分照常转成图片；文字再用 canvas 以页面已加载好的字体画上去。
+const extractText = svgText => {
+  const host = document.createElement('div');
+  host.style.cssText = 'position:fixed;left:-99999px;top:0;visibility:hidden;pointer-events:none';
+  host.innerHTML = svgText;
+  document.body.append(host);
+  try {
+    const svg = host.firstElementChild;
+    const ops = [];
+    for (const t of svg.querySelectorAll('text')) {
+      const cs = getComputedStyle(t);
+      if (cs.display === 'none') continue;
+      const m = t.getCTM();
+      const styleOf = el => {
+        const c = getComputedStyle(el);
+        return { size: parseFloat(c.fontSize), family: c.fontFamily, weight: c.fontWeight, fill: c.fill };
+      };
+      const runs = [...t.childNodes].map(n => ({
+        text: n.textContent,
+        ...(n.nodeType === 1 ? styleOf(n) : styleOf(t)),
+      })).filter(r => r.text);
+      ops.push({
+        m: [m.a, m.b, m.c, m.d, m.e, m.f],
+        x: t.x.baseVal[0]?.value ?? 0,
+        y: t.y.baseVal[0]?.value ?? 0,
+        anchor: cs.textAnchor,
+        central: cs.dominantBaseline === 'central' || cs.dominantBaseline === 'middle',
+        stroke: cs.stroke !== 'none' ? cs.stroke : null,
+        strokeWidth: parseFloat(cs.strokeWidth) || 0,
+        runs,
+      });
+      t.remove();
+    }
+    return { svg: svg.outerHTML, ops, chars: ops.flatMap(o => o.runs.map(r => r.text)).join('') };
+  } finally {
+    host.remove();
+  }
+};
+
+const drawText = (ctx, ops, scale) => {
+  const color = c => (c && c !== 'none' ? c : '#222');
+  for (const o of ops) {
+    const [a, b, c, d, e, f] = o.m;
+    ctx.setTransform(a * scale, b * scale, c * scale, d * scale, e * scale, f * scale);
+    ctx.textBaseline = o.central ? 'middle' : 'alphabetic';
+    ctx.textAlign = 'left';
+    const font = r => `${r.weight} ${r.size}px ${r.family}`;
+    const widths = o.runs.map(r => { ctx.font = font(r); return ctx.measureText(r.text).width; });
+    const total = widths.reduce((s, w) => s + w, 0);
+    let x = o.x - (o.anchor === 'middle' ? total / 2 : o.anchor === 'end' ? total : 0);
+    const positions = widths.map(w => { const p = x; x += w; return p; });
+    if (o.stroke && o.strokeWidth) {
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = o.strokeWidth;
+      ctx.strokeStyle = o.stroke;
+      o.runs.forEach((r, i) => { ctx.font = font(r); ctx.strokeText(r.text, positions[i], o.y); });
+    }
+    o.runs.forEach((r, i) => { ctx.font = font(r); ctx.fillStyle = color(r.fill); ctx.fillText(r.text, positions[i], o.y); });
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+};
+
+// 把 SVG 文本栅格化为 PNG，返回 blob URL；能下载时顺便触发下载
+export const rasterize = async (text, W, H, scale, filename) => {
+  const { svg, ops, chars } = extractText(text);
+  await document.fonts.load(`16px 'CityEx Sans'`, chars); // 确保页面字体已就绪
+  const img = new Image();
+  const svgUrl = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+  await new Promise((resolve, reject) => {
+    img.onload = resolve;
+    img.onerror = reject;
+    img.src = svgUrl;
+  });
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W * scale;
+  canvas.height = H * scale;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  drawText(ctx, ops, scale);
+  URL.revokeObjectURL(svgUrl);
+
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  const url = URL.createObjectURL(blob);
+  // 内置浏览器不支持下载时，只展示图片供长按保存
+  if (canDownload()) download(url, filename);
+  return url;
+};
 
 export const exportImage = async levels => {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -59,31 +140,7 @@ export const exportImage = async levels => {
 
   // --k：导出图 1 单位 = SCALE 像素，投影偏移与页面上保持同样的像素
   const text = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${FULL_VIEW.join(' ')}" width="${W}" height="${H}" style="--k:${1 / SCALE}">`
-    + `<style>${await loadFontFace()}${STYLE}${CARD_STYLE}</style>${svg.innerHTML}${overlay}</svg>`;
+    + `<style>${STYLE}${CARD_STYLE}</style>${svg.innerHTML}${overlay}</svg>`;
 
-  const img = new Image();
-  const svgUrl = URL.createObjectURL(new Blob([text], { type: 'image/svg+xml' }));
-  await new Promise((resolve, reject) => {
-    img.onload = resolve;
-    img.onerror = reject;
-    img.src = svgUrl;
-  });
-  // Safari 在 onload 时内联字体可能还没就绪，稍等再画（china-ex 同样的处理）
-  await new Promise(resolve => setTimeout(resolve, 300));
-
-  const canvas = document.createElement('canvas');
-  canvas.width = W * SCALE;
-  canvas.height = H * SCALE;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = BG;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  URL.revokeObjectURL(svgUrl);
-
-  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-  const url = URL.createObjectURL(blob);
-
-  // 内置浏览器不支持下载时，只展示图片供长按保存
-  if (canDownload()) download(url, '城市制霸.png');
-  return url;
+  return rasterize(text, W, H, SCALE, '城市制霸.png');
 };
