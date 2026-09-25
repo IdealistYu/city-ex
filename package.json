@@ -22,6 +22,7 @@
     "d3-geo": "^3.1.1",
     "fontkit": "^2.0.4",
     "mapshaper": "^0.7.66",
+    "pinyin-pro": "^3.29.4",
     "playwright": "^1.63.0",
     "polylabel": "^2.1.0",
     "subset-font": "^2.9.0",

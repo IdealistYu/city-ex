@@ -21,6 +21,8 @@ let fine = null;
 let finePromise = null;
 export const loadFine = () => finePromise ??= import('./map-fine.json').then(m => (fine = m.default));
 export const hasFine = () => fine !== null;
+// 某城市当前可用的最精细轮廓（地图坐标）
+export const unitPath = code => fine?.units[code] ?? coarse.units[code];
 
 // 切换主图（不含插图）城市轮廓与边界线的精度；精细版还没加载好时返回 false
 export const setDetail = (svg, level) => {
@@ -77,9 +79,10 @@ export const buildMap = (svg, { withLabels = true } = {}) => {
     for (const p of provinces) {
       if (p.single) continue;
       const g = el('g', { 'data-province': p.code }, labelLayer);
+      el('g', { class: 'leaders' }, g); // 引线：放不下名字的小城市，由 main.js 的布局填充
       for (const u of unitsOf(p.code)) {
         if (!u.label) continue;
-        el('text', { x: u.label[0], y: u.label[1] }, g).textContent = u.short;
+        el('text', { x: u.label[0], y: u.label[1], 'data-code': u.code }, g).textContent = u.short;
       }
     }
   }
@@ -103,6 +106,20 @@ export const buildMap = (svg, { withLabels = true } = {}) => {
   el('text', { class: 'inset-title', x: bx + bw - 7, y: by + bh - 7 }, inset).textContent = '南海诸岛';
 
   return svg;
+};
+
+// 三沙卡片（海南省视图用）：南海插图的内容，三沙按等级上色，周边陆地淡色
+export const SANSHA = '460300';
+export const buildSanshaCard = svg => {
+  const [bx, by, bw, bh] = data.inset.box;
+  svg.setAttribute('viewBox', `${bx} ${by} ${bw} ${bh}`);
+  svg.innerHTML = '';
+  for (const u of data.inset.units) {
+    el('path', u.code === SANSHA
+      ? { class: 'unit sansha', d: u.d, 'data-code': u.code }
+      : { class: 'land', d: u.d }, svg);
+  }
+  el('path', { class: 'jd', d: data.inset.jd }, svg);
 };
 
 // k：当前视图下每像素对应的 viewBox 单位。投影偏移按它换算成固定像素

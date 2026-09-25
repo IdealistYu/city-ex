@@ -1,7 +1,8 @@
-/* 得意黑子集（改名 CityEx Sans，见 scripts/build-font.mjs） */
+/* 得意黑子集（改名 CityEx Sans，见 scripts/build-font.mjs）。放在 src 下由 Vite 打包，文件名带内容哈希，
+   字体更新后浏览器必然取新文件，不会用缓存里缺字的旧版本 */
 @font-face {
   font-family: 'CityEx Sans';
-  src: url('/fonts/cityex-sans.woff2') format('woff2');
+  src: url('./fonts/cityex-sans.woff2') format('woff2');
   font-display: swap;
 }
 
@@ -63,6 +64,7 @@ button:disabled { cursor: progress; opacity: .7; }
   box-shadow: 2px 3px 0 var(--shadow);
 }
 .btn.primary { background: var(--ink); color: #fff; }
+.btn.danger { background: var(--l5); }
 .btn:active { transform: translateY(1px); box-shadow: none; }
 .btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .btn svg.solid { fill: currentColor; stroke: none; }
@@ -167,9 +169,12 @@ dialog .actions { display: flex; justify-content: flex-end; gap: 8px; }
 #level-stats b { font-size: 16px; }
 .tip { margin: 0; padding-top: 10px; border-top: 1.5px dashed var(--divider); color: var(--muted); font-size: 13px; }
 
+/* 手机端面板把手（宽屏不显示） */
+.panel-handle { display: none; }
+
 /* 数据备份 */
-.backup { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
-.backup span { flex: 1; }
+.backup { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.backup span { width: 100%; }
 .backup button { padding: 2px 8px; font-size: 12px; color: var(--ink); }
 
 /* 省视图：本省进度、画笔、城市列表 */
@@ -183,6 +188,26 @@ dialog .actions { display: flex; justify-content: flex-end; gap: 8px; }
 #brush button, #city-list button { padding: 3px 7px; font-size: 13px; }
 #brush button.active { outline: 3px solid var(--ink); outline-offset: 1px; }
 #city-list { align-content: flex-start; overflow-y: auto; padding-top: 10px; border-top: 1.5px dashed var(--divider); }
+
+/* ---------- 三沙卡片（海南省视图） ---------- */
+#sansha-card {
+  position: fixed; z-index: 2; width: 128px; padding: 6px 6px 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  border: 2px solid var(--ink); border-radius: 10px; background: var(--paper);
+  box-shadow: 3px 5px 0 var(--shadow);
+}
+#sansha-card svg { width: 100%; aspect-ratio: 150 / 181; display: block; }
+#sansha-card .land { fill: var(--dim); stroke: var(--dim-line); stroke-width: .4; }
+#sansha-card .sansha { stroke: var(--ink); stroke-width: 1.2; }
+#sansha-card .jd { stroke-width: .5; vector-effect: none; }
+#sansha-card .name { font-size: 15px; font-weight: bold; padding: 0 10px; border: 1.5px solid var(--ink); border-radius: 6px; background: #fff; }
+/* 三沙都是小岛礁，上色后在小图里几乎看不见，名字随等级上色 */
+#sansha-card:has(.sansha[data-level="5"]) .name { background: var(--l5); }
+#sansha-card:has(.sansha[data-level="4"]) .name { background: var(--l4); }
+#sansha-card:has(.sansha[data-level="3"]) .name { background: var(--l3); }
+#sansha-card:has(.sansha[data-level="2"]) .name { background: var(--l2); }
+#sansha-card:has(.sansha[data-level="1"]) .name { background: var(--l1); }
+#sansha-card .caption { font-size: 11px; color: var(--muted); }
 
 /* ---------- 定位菜单 ---------- */
 #locator {
@@ -275,8 +300,13 @@ dialog .actions { display: flex; justify-content: flex-end; gap: 8px; }
 /* 城市名：只在省视图显示当前省；非当前省不参与绘制 */
 .labels g { visibility: hidden; }
 [data-view="province"] .labels g.active { visibility: visible; }
+/* 引线：放不下名字的小城市，从城市点连到名字 */
+.labels line { stroke: var(--ink); stroke-width: 1.2px; vector-effect: non-scaling-stroke; }
+.labels circle { fill: #fff; stroke: var(--ink); stroke-width: 1.5px; vector-effect: non-scaling-stroke; }
+.labels .leaders { opacity: 0; transition: opacity .3s; }
+[data-view="province"] .labels .active .leaders { opacity: 1; transition-delay: .35s; }
 .labels text {
-  font-size: var(--label-size, 10px);
+  font-size: calc(var(--label-size, 10px) * var(--ls, 1));
   text-anchor: middle; dominant-baseline: central;
   fill: var(--ink);
   paint-order: stroke; stroke: rgba(255, 255, 255, .8); stroke-width: .25em; stroke-linejoin: round;
@@ -362,6 +392,16 @@ dialog .actions { display: flex; justify-content: flex-end; gap: 8px; }
   #brush .options::-webkit-scrollbar, #city-list::-webkit-scrollbar { display: none; }
 
   #locator { left: 8px !important; right: 8px; width: auto; max-height: 72vh; }
+
+  /* 底部面板：顶部把手，点击或上下拖动收起 / 展开；收起后只保留一行摘要 */
+  .panel-handle {
+    display: flex; justify-content: center; align-items: center; flex: none;
+    height: 22px; margin-bottom: -8px; border: 0; background: none; touch-action: none; cursor: grab;
+  }
+  .panel-handle span { width: 40px; height: 5px; border-radius: 3px; background: var(--divider); }
+  #panel.collapsed #level-stats, #panel.collapsed .tip, #panel.collapsed .backup,
+  #panel.collapsed #brush, #panel.collapsed #city-list { display: none; }
+  #sansha-card { width: 104px; }
 }
 
 /* 横屏手机等矮屏：顶栏、侧栏收紧，统计只保留数字 */

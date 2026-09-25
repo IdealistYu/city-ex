@@ -4,6 +4,7 @@ import { units as allUnits, provinceByCode, unitsOf, loadFine } from './map.js';
 import mapData from './map-data.json';
 import { rasterize } from './export.js';
 import { esc } from './dom.js';
+import { layoutLabels, leaderEnd } from './label-layout.js';
 
 const W = 1080, H = 1440, PAD = 64, SCALE = 2;
 const INK = '#222', MUTED = '#6b665c', BG = '#f3efe6', PAPER = '#fbf9f4';
@@ -15,71 +16,33 @@ const MINI_H = 250;
 
 const colorOf = Object.fromEntries(LEVELS.map(l => [l.value, l.value ? l.color : '#fff']));
 
-// ---------- 城市名布局 ----------
-// 按面积从大到小放置：1) 标注点原位（放不下就缩小）；2) 城市自身范围内的其他位置；
-// 3) 都不行就在附近空位写名字并画引线指回城市。文字框必须基本落在自己城市内，避免看起来像在标别的城市。
-const layoutLabels = (units, fine, view) => {
-  const { vx, vy, k, bw, bh } = view;
-  const base = Math.max(22, Math.min(34, Math.sqrt((bw * bh * k * k) / units.length) * 0.16));
-  const placed = [], labels = [];
-  const overlaps = (a, b) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
-  const inCard = b => b.x0 > 8 && b.x1 < MAP.w - 8 && b.y0 > 8 && b.y1 < MAP.h - 8;
-  const boxAt = (x, y, text, s) => {
-    const w = text.length * s * 0.92 + 8, h = s + 6;
-    return { x0: x - w / 2, x1: x + w / 2, y0: y - h / 2, y1: y + h / 2 };
-  };
-  const area = u => (u.bbox[2] - u.bbox[0]) * (u.bbox[3] - u.bbox[1]);
-  const anchors = units.map(u => ({ u, x: (u.label[0] - vx) * k, y: (u.label[1] - vy) * k }));
-  // 所有城市的标注点先占位，别的名字不能盖住
-  const dots = anchors.map(a => ({ x0: a.x - 5, x1: a.x + 5, y0: a.y - 5, y1: a.y + 5, code: a.u.code }));
-  const free = (box, code) => inCard(box) && !placed.some(b => overlaps(b, box)) && !dots.some(d => d.code !== code && overlaps(d, box));
+// ---------- 城市名布局（算法见 label-layout.js） ----------
+// 视图：省份外框居中，四周留白；k 为输出像素 / 地图单位
+const viewOf = prov => {
+  const [bx0, by0, bx1, by1] = prov.bbox;
+  const bw = bx1 - bx0, bh = by1 - by0;
+  const k = Math.min(MAP.w * 0.86 / bw, MAP.h * 0.86 / bh);
+  const vw = MAP.w / k, vh = MAP.h / k;
+  return { bx0, by0, bx1, by1, bw, bh, k, vw, vh, vx: bx0 + bw / 2 - vw / 2, vy: by0 + bh / 2 - vh / 2 };
+};
 
-  const ctx = document.createElement('canvas').getContext('2d');
-  const shapes = new Map(units.map(u => [u.code, new Path2D(fine.units[u.code])]));
-  const inside = (code, px, py) => ctx.isPointInPath(shapes.get(code), px / k + vx, py / k + vy);
-  // 中心在城市内，且四角至少三个在内（容许轻微出界）
-  const fitsIn = (code, b, px, py) => inside(code, px, py)
-    && [[b.x0, b.y0], [b.x1, b.y0], [b.x0, b.y1], [b.x1, b.y1]].filter(([qx, qy]) => inside(code, qx, qy)).length >= 3;
-  const candidates = (u, x, y, sz) => {
-    const [x0, y0, x1, y1] = u.bbox.map((v, i) => (v - (i % 2 ? vy : vx)) * k);
-    const step = Math.max(6, Math.min(x1 - x0, y1 - y0) / 14);
-    const out = [];
-    for (let px = x0; px <= x1; px += step) for (let py = y0; py <= y1; py += step) {
-      if (fitsIn(u.code, boxAt(px, py, u.short, sz), px, py)) out.push({ px, py, d: Math.hypot(px - x, py - y) });
-    }
-    return out.sort((a, b) => a.d - b.d).slice(0, 40);
+const layoutFor = (code, fine) => {
+  const units = unitsOf(code).filter(u => u.d); // 三沙不在主图上
+  const view = viewOf(provinceByCode.get(code));
+  const base = Math.max(22, Math.min(34, Math.sqrt((view.bw * view.bh * view.k * view.k) / units.length) * 0.16));
+  return {
+    view,
+    ...layoutLabels({
+      units, pathOf: c => fine.units[c], view, base,
+      bounds: { x0: 8, y0: 8, x1: MAP.w - 8, y1: MAP.h - 8 },
+    }),
   };
+};
 
-  for (const { u, x, y } of anchors.sort((a, b) => area(b.u) - area(a.u))) {
-    let done = false;
-    sizes: for (const sz of [base, base * 0.82, base * 0.7]) {
-      for (const c of [{ px: x, py: y }, ...candidates(u, x, y, sz)]) {
-        const box = boxAt(c.px, c.py, u.short, sz);
-        if (fitsIn(u.code, box, c.px, c.py) && free(box, u.code)) {
-          placed.push(box);
-          labels.push({ u, x: c.px, y: c.py, s: sz });
-          done = true;
-          break sizes;
-        }
-      }
-    }
-    if (done) continue;
-    const sz = base * 0.7;
-    search: for (const dist of [1.6, 2.2, 2.9, 3.7, 4.6].map(m => m * sz)) {
-      for (let i = 0; i < 8; i++) {
-        const ang = (i / 8) * Math.PI * 2 + Math.PI / 8;
-        const tx = x + Math.cos(ang) * dist * 1.4, ty = y + Math.sin(ang) * dist;
-        const box = boxAt(tx, ty, u.short, sz);
-        if (free(box, u.code)) {
-          placed.push(box);
-          labels.push({ u, x: tx, y: ty, s: sz, leader: [x, y] });
-          done = true;
-          break search;
-        }
-      }
-    }
-  }
-  return labels;
+// 供测试检查：某省导出图的城市名布局
+export const provinceLabelReport = async code => {
+  const { labels, missing } = layoutFor(code, await loadFine());
+  return { labels: labels.map(({ u, x, y, s, leader }) => ({ code: u.code, short: u.short, x, y, s, leader: !!leader })), missing };
 };
 
 // ---------- 生成 SVG ----------
@@ -91,13 +54,7 @@ const buildSvg = (code, levels, fine) => {
   const full = t.visited === t.total;
   const pct = Math.round(t.visited / t.total * 100);
 
-  // 地图视图：省份外框居中，四周留白
-  const [bx0, by0, bx1, by1] = prov.bbox;
-  const bw = bx1 - bx0, bh = by1 - by0;
-  const k = Math.min(MAP.w * 0.86 / bw, MAP.h * 0.86 / bh); // 输出像素 / 地图单位
-  const vw = MAP.w / k, vh = MAP.h / k;
-  const vx = bx0 + bw / 2 - vw / 2, vy = by0 + bh / 2 - vh / 2;
-  const labels = layoutLabels(units, fine, { vx, vy, k, bw, bh });
+  const { view: { bx0, by0, bx1, by1, bw, bh, k, vw, vh, vx, vy }, labels } = layoutFor(code, fine);
 
   const others = allUnits.filter(u => u.province !== code && u.d);
   const mapSvg = `
@@ -111,9 +68,8 @@ const buildSvg = (code, levels, fine) => {
   <path d="${fine.lines.country}" fill="none" stroke="${INK}" stroke-width="${3.2 / k}" stroke-linejoin="round"/>
 </svg>`;
 
-  const leaders = labels.filter(l => l.leader).map(({ x, y, s, leader: [ax, ay] }) => {
-    const dx = x - ax, dy = y - ay, len = Math.hypot(dx, dy);
-    const ex = x - dx / len * s * 0.9, ey = y - dy / len * s * 0.6; // 连到文字框边缘
+  const leaders = labels.filter(l => l.leader).map(l => {
+    const [ax, ay] = l.leader, [ex, ey] = leaderEnd(l);
     return `<line x1="${MAP.x + ax}" y1="${MAP.y + ay}" x2="${MAP.x + ex}" y2="${MAP.y + ey}" stroke="${INK}" stroke-width="2"/>
 <circle cx="${MAP.x + ax}" cy="${MAP.y + ay}" r="5" fill="#fff" stroke="${INK}" stroke-width="2.5"/>`;
   }).join('');

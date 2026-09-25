@@ -1,3 +1,8 @@
 node_modules/
 dist/
 data/raw/
+
+# 只在本地使用：数据处理与字体脚本、测试、开发文档与待办
+scripts/
+tests/
+docs/*.md

@@ -11,6 +11,25 @@ const MAX_RESULTS = 30;
 
 const color = code => levelOf(getLevel(code)).color;
 
+// 搜索：中文名 / 简称，或拼音（全拼、首字母，如 shenzhen、sz）。得分越小越靠前：
+// 中文完全匹配 0、中文包含 1、全拼完全匹配 2、全拼开头 3、首字母开头 4、全拼包含 5
+const score = (item, q) => {
+  if (/[\u4e00-\u9fff]/.test(q)) {
+    if (item.short === q || item.name === q) return 0;
+    return item.name.includes(q) || item.short.includes(q) ? 1 : -1;
+  }
+  const a = q.toLowerCase().replace(/[\s']/g, '');
+  if (!a || !/^[a-z]+$/.test(a)) return -1;
+  if (item.py === a) return 2;
+  if (item.py.startsWith(a)) return 3;
+  if (item.pi.startsWith(a)) return 4;
+  return item.py.includes(a) ? 5 : -1;
+};
+const search = q => [
+  ...units.map(u => ({ item: u, s: score(u, q) })),
+  ...provinces.filter(p => !p.single).map(p => ({ item: { province: p.code, isProvince: true, name: p.name }, s: score(p, q) })),
+].filter(h => h.s >= 0).sort((a, b) => a.s - b.s).map(h => h.item);
+
 export const createLocator = ({ box, panel, onCity, onProvince, getActiveProvince }) => {
   const input = box.querySelector('input');
   const topbar = box.closest('#topbar');
@@ -43,14 +62,12 @@ export const createLocator = ({ box, panel, onCity, onProvince, getActiveProvinc
   };
 
   const renderSearch = q => {
-    const hits = units.filter(u => u.name.includes(q) || u.short.includes(q))
-      .concat(provinces.filter(p => !p.single && p.name.includes(q)).map(p => ({ province: p.code, isProvince: true, name: p.name })))
-      .slice(0, MAX_RESULTS);
+    const hits = search(q).slice(0, MAX_RESULTS);
     body.innerHTML = hits.length
       ? `<div class="loc-list">${hits.map(h => h.isProvince
         ? `<button data-province="${h.province}"><b>${esc(h.name)}</b><small>省份</small></button>`
         : `<button data-city="${h.code}" style="--c:${color(h.code)}"><b>${esc(h.name)}</b><small>${esc(provinceByCode.get(h.province).short)}</small></button>`).join('')}</div>`
-      : '<p class="loc-empty">没有找到，试试城市全称或简称</p>';
+      : '<p class="loc-empty">没有找到，试试城市名、简称或拼音（如 shenzhen、sz）</p>';
   };
 
   const render = () => {

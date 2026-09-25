@@ -86,3 +86,20 @@ importFile.addEventListener('change', async () => {
   replaceAll(mode === 'merge' ? mergeLevels(current, levels) : levels);
   toast(`已导入 ${count} 个城市${describeSkipped(skipped)}`, skipped.length ? 5000 : 3000);
 });
+
+// ---------- 清空 ----------
+const clearDialog = $('#clear-dialog');
+
+$('#clear-data').addEventListener('click', async () => {
+  const count = Object.keys(allLevels()).length;
+  if (!count) return toast('还没有标记任何城市');
+  clearDialog.querySelector('.summary').textContent = `将删除本浏览器中保存的 ${count} 个城市标记，删除后无法恢复。建议先导出备份。`;
+  clearDialog.returnValue = '';
+  clearDialog.showModal();
+  const choice = await new Promise(resolve => clearDialog.addEventListener('close', () => resolve(clearDialog.returnValue), { once: true }));
+  if (choice === 'export') $('#export-data').click();
+  if (choice === 'clear') {
+    replaceAll({});
+    toast(`已清空 ${count} 个城市的标记`);
+  }
+});

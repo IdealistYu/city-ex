@@ -4,11 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>城市制霸</title>
-  <meta name="description" content="标记你去过的每一座中国城市，按居住、短居、游玩、出差、路过给地级市上色，生成你的城市足迹地图">
+  <meta name="description" content="标记你去过的每一座中国城市，按居住、短居、游玩、出差、路过给城市上色，生成你的城市足迹地图">
   <meta name="theme-color" content="#f3efe6">
+  <!-- 分享预览（微信、QQ、微博、Telegram、X 等读取；图片须为完整网址） -->
+  <link rel="canonical" href="https://china.loveyou.moe/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="城市制霸">
+  <meta property="og:url" content="https://china.loveyou.moe/">
+  <meta property="og:title" content="城市制霸 · 标记你去过的每一座中国城市">
+  <meta property="og:description" content="370 座城市，按居住、短居、游玩、出差、路过涂色，一键生成你的城市足迹地图。">
+  <meta property="og:image" content="https://china.loveyou.moe/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="城市制霸：一张标记了去过城市的中国地图">
+  <meta property="og:locale" content="zh_CN">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="城市制霸 · 标记你去过的每一座中国城市">
+  <meta name="twitter:description" content="370 座城市，按居住、短居、游玩、出差、路过涂色，一键生成你的城市足迹地图。">
+  <meta name="twitter:image" content="https://china.loveyou.moe/og.jpg">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='4' width='26' height='24' rx='6' fill='%23FF7E7E' stroke='%23222' stroke-width='3'/%3E%3Cpath d='M9 20l5-8 4 5 3-4 3 7z' fill='%23fff' stroke='%23222' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E">
   <!-- 字体尽早加载，避免首屏先用系统字体再闪一下 -->
-  <link rel="preload" href="/fonts/cityex-sans.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/src/fonts/cityex-sans.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
@@ -20,7 +36,7 @@
     </nav>
     <div id="search" class="search" aria-expanded="false" aria-controls="locator">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
-      <input type="search" placeholder="搜索城市或省份" aria-label="搜索城市或省份" autocomplete="off" enterkeyhint="go">
+      <input type="search" placeholder="搜索城市、省份或拼音" aria-label="搜索城市或省份" autocomplete="off" enterkeyhint="go">
     </div>
     <a id="repo" class="btn icon-btn" href="https://github.com/IdealistYu/city-ex" target="_blank" rel="noopener" aria-label="GitHub 代码仓库" title="GitHub 代码仓库">
       <svg class="solid" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
@@ -37,10 +53,18 @@
 
   <main id="stage">
     <svg id="map" xmlns="http://www.w3.org/2000/svg"></svg>
+    <!-- 海南省视图：三沙远在南海，主图上点不到，用这张小卡片标记 -->
+    <button id="sansha-card" type="button" hidden aria-label="标记三沙市（南海诸岛）">
+      <svg aria-hidden="true"></svg>
+      <span class="name">三沙</span>
+      <span class="caption">南海诸岛</span>
+    </button>
   </main>
 
   <!-- 侧栏（窄屏为底部面板）：全国视图显示统计，省视图显示本省进度、画笔、城市列表 -->
   <aside id="panel">
+    <!-- 手机端：点击或上下拖动收起 / 展开面板 -->
+    <button id="panel-toggle" class="panel-handle" type="button" aria-expanded="true" aria-controls="panel" aria-label="收起面板"><span></span></button>
     <section id="stats">
       <div class="score-line">
         <div class="score"><b id="score-num">0</b><span>分</span></div>
@@ -52,6 +76,7 @@
         <span>数据只保存在本浏览器</span>
         <button id="export-data" type="button" title="导出为 JSON 文件，可在本地编辑后再导入">导出</button>
         <button id="import-data" type="button" title="从 JSON 文件导入">导入</button>
+        <button id="clear-data" type="button" title="清空全部标记">清空</button>
         <input id="import-file" type="file" accept=".json,application/json,text/plain" hidden>
       </div>
     </section>
@@ -107,6 +132,19 @@
       <div class="actions">
         <button value="close" class="btn">关闭</button>
         <button type="button" id="copy-data" class="btn primary">复制</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 清空全部标记：二次确认 -->
+  <dialog id="clear-dialog" aria-labelledby="clear-title">
+    <form method="dialog">
+      <h2 id="clear-title">清空全部标记？</h2>
+      <p class="summary"></p>
+      <div class="actions">
+        <button value="cancel" class="btn" autofocus>取消</button>
+        <button value="export" class="btn">先导出备份</button>
+        <button value="clear" class="btn danger">清空</button>
       </div>
     </form>
   </dialog>
