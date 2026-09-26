@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用说明 - 城市制霸：标记你去过的中国城市，生成城市足迹地图</title>
+  <meta name="description" content="城市制霸是一个免费的在线工具：在中国地图上标记你去过的 370 座城市，按居住、短居、游玩、出差、路过五个等级上色，自动统计分数，并生成全国或单省的足迹分享图。">
+  <meta name="keywords" content="城市制霸,中国制霸,足迹地图,去过的城市,旅行足迹,城市打卡,中国地图涂色,旅行地图生成">
+  <link rel="canonical" href="https://china.loveyou.moe/about.html">
+  <meta name="theme-color" content="#f3efe6">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="城市制霸">
+  <meta property="og:url" content="https://china.loveyou.moe/about.html">
+  <meta property="og:title" content="使用说明 - 城市制霸">
+  <meta property="og:description" content="在中国地图上标记你去过的 370 座城市，生成你的城市足迹地图。">
+  <meta property="og:image" content="https://china.loveyou.moe/og.jpg">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "城市制霸是什么？",
+        "acceptedAnswer": { "@type": "Answer", "text": "城市制霸是一个免费的在线工具，可以在中国地图上标记你去过的每一座城市，按居住、短居、游玩、出差、路过五个等级上色，并生成全国或单省的足迹分享图。" }
+      },
+      {
+        "@type": "Question",
+        "name": "370 座城市是怎么算的？",
+        "acceptedAnswer": { "@type": "Answer", "text": "包括 333 个地级行政区（293 个地级市、30 个自治州、7 个地区、3 个盟）、30 个省直辖县级单位，以及北京、天津、上海、重庆、香港、澳门、台湾各算一个，共 370 个。" }
+      },
+      {
+        "@type": "Question",
+        "name": "我的数据保存在哪里？",
+        "acceptedAnswer": { "@type": "Answer", "text": "数据只保存在你自己的浏览器里，不上传任何服务器。换设备或清理浏览器数据前，可以导出为 JSON 文件备份，之后再导入恢复。" }
+      },
+      {
+        "@type": "Question",
+        "name": "需要注册或付费吗？",
+        "acceptedAnswer": { "@type": "Answer", "text": "不需要。城市制霸完全免费，无需注册登录，手机和电脑的浏览器都可以直接使用。" }
+      }
+    ]
+  }
+  </script>
+  <style>
+    :root { --bg: #f3efe6; --ink: #222; --muted: #6b665c; --card: #fff; --line: #d8d2c4; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--ink);
+      font: 16px/1.75 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+    }
+    main { max-width: 760px; margin: 0 auto; padding: 32px 20px 64px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .brand { font-size: 26px; font-weight: 800; color: var(--ink); text-decoration: none; letter-spacing: 1px; }
+    .cta {
+      display: inline-block; padding: 8px 18px; border: 2px solid var(--ink); border-radius: 8px;
+      background: var(--ink); color: #fff; text-decoration: none; font-weight: 600; box-shadow: 3px 4px 0 rgba(0,0,0,.14);
+    }
+    h1 { font-size: 30px; line-height: 1.3; margin: 32px 0 8px; }
+    .lead { color: var(--muted); font-size: 17px; margin: 0 0 24px; }
+    h2 { font-size: 22px; margin: 40px 0 12px; }
+    h3 { font-size: 17px; margin: 22px 0 6px; }
+    p, li { margin: 6px 0; }
+    img { display: block; width: 100%; height: auto; border: 3px solid var(--ink); border-radius: 14px; box-shadow: 5px 7px 0 rgba(0,0,0,.12); margin: 20px 0; }
+    table { width: 100%; border-collapse: collapse; background: var(--card); border: 2px solid var(--ink); border-radius: 10px; overflow: hidden; margin: 12px 0; font-size: 15px; }
+    th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { background: #f7f4ee; }
+    tr:last-child td { border-bottom: 0; }
+    .dot { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--ink); border-radius: 4px; vertical-align: -2px; margin-right: 6px; }
+    footer { margin-top: 48px; padding-top: 16px; border-top: 1.5px dashed var(--line); color: var(--muted); font-size: 14px; }
+    footer a, main a { color: var(--ink); }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <a class="brand" href="/">城市制霸</a>
+    <a class="cta" href="/">开始标记我的城市 →</a>
+  </header>
+
+  <h1>城市制霸：标记你去过的每一座中国城市</h1>
+  <p class="lead">城市制霸是一个免费的在线足迹地图工具。在中国地图上给去过的城市涂色，按居住、短居、游玩、出差、路过区分，自动统计分数，一键生成可以分享的足迹地图。无需注册，手机和电脑的浏览器都能直接用。</p>
+
+  <img src="/og.jpg" alt="城市制霸：标记了去过城市的中国足迹地图示例" width="1200" height="630">
+
+  <h2>怎么用</h2>
+  <ol>
+    <li><strong>点击省份</strong>：在全国地图上点击一个省，地图会放大到这个省，显示所有城市。</li>
+    <li><strong>标记城市</strong>：点击城市，选择去过的程度；也可以先选好"画笔"的等级，再连续点击多个城市快速涂色。</li>
+    <li><strong>查看统计</strong>：总分、去过的城市数量、各等级数量会自动更新；每个省也会显示点亮了几座城市。</li>
+    <li><strong>保存分享图</strong>：在全国视图保存全国足迹图，在省视图保存该省的"XX制霸"图，全省点亮还会盖上"全制霸"印章。</li>
+  </ol>
+  <p>找不到某个城市？在顶部搜索框输入城市名、简称或拼音（例如"深圳""shenzhen""sz"）即可直接定位。</p>
+
+  <h2>五个等级</h2>
+  <table>
+    <thead><tr><th>等级</th><th>含义</th><th>分数</th></tr></thead>
+    <tbody>
+      <tr><td><span class="dot" style="background:#FF7E7E"></span>居住</td><td>住过一年以上</td><td>5</td></tr>
+      <tr><td><span class="dot" style="background:#FFB57E"></span>短居</td><td>住过一个月以上</td><td>4</td></tr>
+      <tr><td><span class="dot" style="background:#FFE57E"></span>游玩</td><td>旅行过</td><td>3</td></tr>
+      <tr><td><span class="dot" style="background:#A8FFBE"></span>出差</td><td>去过但没怎么玩</td><td>2</td></tr>
+      <tr><td><span class="dot" style="background:#88AEFF"></span>路过</td><td>路过或经停</td><td>1</td></tr>
+    </tbody>
+  </table>
+  <p>总分就是所有城市等级分数之和，满分为 370 × 5 = 1850 分。</p>
+
+  <h2>370 座城市是怎么算的</h2>
+  <p>这里的"城市"指<strong>地级行政区</strong>，以及与地级同样被视为一个"地方"的单位，按民政部行政区划划分，共 370 个：</p>
+  <table>
+    <thead><tr><th>类别</th><th>数量</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>地级市</td><td>293</td><td>如杭州、苏州、三沙</td></tr>
+      <tr><td>自治州</td><td>30</td><td>如延边、大理、伊犁</td></tr>
+      <tr><td>地区</td><td>7</td><td>大兴安岭、阿里、阿克苏、喀什、和田、塔城、阿勒泰</td></tr>
+      <tr><td>盟</td><td>3</td><td>兴安盟、锡林郭勒盟、阿拉善盟</td></tr>
+      <tr><td><strong>地级行政区合计</strong></td><td><strong>333</strong></td><td></td></tr>
+      <tr><td>省直辖县级单位</td><td>30</td><td>河南济源；湖北仙桃、潜江、天门、神农架林区；海南五指山、琼海、文昌、万宁、东方及定安、屯昌、澄迈、临高、白沙、昌江、乐东、陵水、保亭、琼中；新疆兵团石河子、阿拉尔、图木舒克、五家渠、北屯、铁门关、双河、可克达拉、昆玉、胡杨河</td></tr>
+      <tr><td>直辖市、特别行政区、台湾</td><td>7</td><td>北京、天津、上海、重庆、香港、澳门、台湾各算一个，不再细分到区县</td></tr>
+      <tr><td><strong>总计</strong></td><td><strong>370</strong></td><td></td></tr>
+    </tbody>
+  </table>
+  <p>县级市不单独计算：昆山、张家港属于苏州，义乌属于金华，标记所在的地级市即可。直辖市也不细分区县，去过北京任何一个区都算去过北京。</p>
+
+  <h2>常见问题</h2>
+  <h3>我的数据保存在哪里？</h3>
+  <p>数据只保存在你自己的浏览器里，不上传任何服务器。换设备或清理浏览器数据前，可以在统计卡片里点"导出"保存为 JSON 文件，之后在新设备上点"导入"恢复。</p>
+  <h3>需要注册或付费吗？</h3>
+  <p>不需要。城市制霸完全免费，无需注册登录。</p>
+  <h3>和"中国制霸"有什么不同？</h3>
+  <p>常见的"中国制霸"以省为单位标记；城市制霸细化到 370 座城市，并且可以放大到每个省逐个标记城市、导出单省足迹图。</p>
+  <h3>在微信里打不开怎么办？</h3>
+  <p>点右上角"…"，选择"在浏览器打开"即可。</p>
+
+  <p><a class="cta" href="/">开始标记我的城市 →</a></p>
+
+  <footer>
+    <p>城市制霸 · <a href="https://china.loveyou.moe/">china.loveyou.moe</a> · <a href="https://github.com/IdealistYu/city-ex">GitHub</a></p>
+    <p>灵感来自 itorr/china-ex。地图边界数据来自阿里 DataV GeoAtlas，行政区划以数据采集时为准。</p>
+  </footer>
+</main>
+</body>
+</html>

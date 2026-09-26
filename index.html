@@ -3,9 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>城市制霸</title>
+  <title>城市制霸 - 标记你去过的中国城市，生成城市足迹地图</title>
   <meta name="description" content="标记你去过的每一座中国城市，按居住、短居、游玩、出差、路过给城市上色，生成你的城市足迹地图">
+  <meta name="keywords" content="城市制霸,中国制霸,足迹地图,去过的城市,旅行足迹,城市打卡,中国地图涂色,旅行地图生成">
   <meta name="theme-color" content="#f3efe6">
+  <!-- 结构化数据：让搜索引擎识别为免费的网页工具 -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "城市制霸",
+    "url": "https://china.loveyou.moe/",
+    "description": "在中国地图上标记你去过的 370 座城市，按居住、短居、游玩、出差、路过上色，生成全国或单省的城市足迹地图。",
+    "applicationCategory": "TravelApplication",
+    "operatingSystem": "Any",
+    "inLanguage": "zh-CN",
+    "image": "https://china.loveyou.moe/og.jpg",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" }
+  }
+  </script>
   <!-- 分享预览（微信、QQ、微博、Telegram、X 等读取；图片须为完整网址） -->
   <link rel="canonical" href="https://china.loveyou.moe/">
   <meta property="og:type" content="website">
@@ -22,7 +39,10 @@
   <meta name="twitter:title" content="城市制霸 · 标记你去过的每一座中国城市">
   <meta name="twitter:description" content="370 座城市，按居住、短居、游玩、出差、路过涂色，一键生成你的城市足迹地图。">
   <meta name="twitter:image" content="https://china.loveyou.moe/og.jpg">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='4' width='26' height='24' rx='6' fill='%23FF7E7E' stroke='%23222' stroke-width='3'/%3E%3Cpath d='M9 20l5-8 4 5 3-4 3 7z' fill='%23fff' stroke='%23222' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
   <!-- 字体尽早加载，避免首屏先用系统字体再闪一下 -->
   <link rel="preload" href="/src/fonts/cityex-sans.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/src/style.css">
@@ -71,7 +91,7 @@
         <div id="visited"></div>
       </div>
       <ul id="level-stats"></ul>
-      <p class="tip">点击省份进入，给去过的城市标记等级</p>
+      <p class="tip">点击省份进入，给去过的城市标记等级 · <a href="about.html">使用说明</a></p>
       <div class="backup">
         <span>数据只保存在本浏览器</span>
         <button id="export-data" type="button" title="导出为 JSON 文件，可在本地编辑后再导入">导出</button>
@@ -151,7 +171,7 @@
 
   <div id="toast" role="status" aria-live="polite" hidden></div>
 
-  <noscript><p class="noscript">城市制霸需要开启 JavaScript 才能使用。</p></noscript>
+  <noscript><p class="noscript">城市制霸需要开启 JavaScript 才能使用。<a href="about.html">查看使用说明</a></p></noscript>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
