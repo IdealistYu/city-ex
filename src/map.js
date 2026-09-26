@@ -96,8 +96,9 @@ export const buildMap = (svg, { withLabels = true } = {}) => {
   el('rect', { class: 'inset-shadow', ...box }, inset);
   el('rect', { class: 'inset-bg', ...box }, inset);
   const clipped = el('g', { 'clip-path': `url(#${clipId})` }, inset);
+  // 三沙的岛礁只有几个像素，单独描深色边，才看得出星星点点的岛
   for (const u of data.inset.units) {
-    el('path', { class: 'unit', d: u.d, 'data-code': u.code }, clipped);
+    el('path', { class: u.code === SANSHA ? 'unit sansha' : 'unit', d: u.d, 'data-code': u.code }, clipped);
   }
   el('path', { class: 'line-province', d: data.inset.province }, clipped);
   el('path', { class: 'line-country', d: data.inset.country }, clipped);

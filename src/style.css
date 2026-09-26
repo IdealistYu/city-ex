@@ -301,6 +301,8 @@ dialog .actions { display: flex; justify-content: flex-end; gap: 8px; }
 .inset .unit { stroke-width: .3px; }
 .inset .line-province { stroke-width: .6px; }
 .inset .line-country { stroke-width: 1px; }
+/* 三沙岛礁单独描深色边（选择器要压过全国视图"描边与填充同色"的规则） */
+[data-view] #map .inset .unit.sansha { stroke: var(--ink); stroke-width: .8px; vector-effect: non-scaling-stroke; }
 /* 九段线：原数据是一组细长色块，加同色描边单独加粗 */
 .jd { fill: var(--ink); stroke: var(--ink); stroke-width: 1.6px; stroke-linecap: round; }
 [data-view="province"] .inset { opacity: 0; }

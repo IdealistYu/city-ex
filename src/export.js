@@ -22,6 +22,7 @@ ${LEVELS.filter(l => l.value).map(l => `.unit[data-level="${l.value}"]{fill:${l.
 .inset .unit{stroke-width:.2}
 .inset .line-province{stroke-width:.35}
 .inset .line-country{stroke-width:.55}
+.inset .sansha{stroke:#222;stroke-width:.7}
 .jd{fill:#222;stroke:#222;stroke-width:1.2;stroke-linecap:round}
 text{font-family:${FONT};fill:#222}
 `;
