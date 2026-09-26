@@ -139,10 +139,11 @@ dialog .actions { display: flex; justify-content: flex-end; gap: 8px; }
 .search input { flex: 1; min-width: 0; border: 0; outline: none; background: none; font: inherit; color: var(--ink); }
 .search input::placeholder { color: var(--muted); }
 .search[aria-expanded="true"] { box-shadow: 0 0 0 3px var(--l3); color: var(--ink); }
-/* 顶栏控件统一 38px 高；GitHub 与保存图片靠右 */
+/* 顶栏控件统一 38px 高；使用说明、GitHub 与保存图片靠右成组（间距收紧为 8px） */
 #topbar .btn { height: 38px; }
-#repo { margin-left: auto; }
-#repo + #save { margin-left: -6px; } /* 两个按钮间距收紧为 8px，视觉上成组 */
+#help { margin-left: auto; }
+#help + #repo, #repo + #save { margin-left: -6px; }
+#help .dot { fill: currentColor; stroke: none; }
 
 /* ---------- 侧栏：宽屏省视图在右侧，宽屏全国视图在左下，窄屏在底部 ---------- */
 #panel {
@@ -168,7 +169,6 @@ dialog .actions { display: flex; justify-content: flex-end; gap: 8px; }
 #level-stats small { margin-left: 6px; color: var(--muted); font-size: 12px; }
 #level-stats b { font-size: 16px; }
 .tip { margin: 0; padding-top: 10px; border-top: 1.5px dashed var(--divider); color: var(--muted); font-size: 13px; }
-.tip a { display: block; width: fit-content; margin-top: 2px; color: var(--ink); white-space: nowrap; }
 
 /* 手机端面板把手（宽屏不显示） */
 .panel-handle { display: none; }
@@ -357,8 +357,9 @@ dialog .actions { display: flex; justify-content: flex-end; gap: 8px; }
   [data-view="province"] .crumb-root { font-size: 15px; }
   #crumb-province { font-size: 18px; }
   .search { flex: none; width: 38px; padding: 0 8px; margin-left: auto; cursor: pointer; }
+  #help { margin-left: 0; }
   .search input { width: 0; }
-  #topbar.searching #crumb, #topbar.searching #save { display: none; }
+  #topbar.searching #crumb, #topbar.searching #save, #topbar.searching #help { display: none; }
   #topbar.searching .search { flex: 1; width: auto; }
   #save { flex: none; justify-content: center; width: 38px; padding: 0; }
   #save span { display: none; }
@@ -424,6 +425,7 @@ dialog .actions { display: flex; justify-content: flex-end; gap: 8px; }
 @media (max-width: 700px), (hover: none) and (pointer: coarse) {
   #repo { display: none; }
   #repo + #save { margin-left: 0; }
+  #help + #repo { margin-left: 0; }
 }
 
 /* 触屏：加大点击区域（接近 44px 的建议尺寸）；输入框至少 16px，否则 iOS 聚焦时会放大整个页面 */
