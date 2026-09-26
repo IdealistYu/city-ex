@@ -402,6 +402,8 @@ dialog .actions { display: flex; justify-content: flex-end; gap: 8px; }
     padding-right: 20px; scrollbar-width: none;
   }
   #brush .options::-webkit-scrollbar, #city-list::-webkit-scrollbar { display: none; }
+  /* 滑动容器会裁掉超出边界的内容：四周留出选中框（按钮外 4px 的轮廓线）的位置，上下用负外边距抵消，行高不变 */
+  #brush .options { padding: 4px 20px 4px 4px; margin: -4px 0; }
 
   #locator { left: 8px !important; right: 8px; width: auto; max-height: 72vh; }
 
