@@ -168,7 +168,7 @@ dialog .actions { display: flex; justify-content: flex-end; gap: 8px; }
 #level-stats small { margin-left: 6px; color: var(--muted); font-size: 12px; }
 #level-stats b { font-size: 16px; }
 .tip { margin: 0; padding-top: 10px; border-top: 1.5px dashed var(--divider); color: var(--muted); font-size: 13px; }
-.tip a { color: var(--ink); }
+.tip a { display: block; width: fit-content; margin-top: 2px; color: var(--ink); white-space: nowrap; }
 
 /* 手机端面板把手（宽屏不显示） */
 .panel-handle { display: none; }
