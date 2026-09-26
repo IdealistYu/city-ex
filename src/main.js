@@ -443,12 +443,14 @@ const refit = (animate = false) => {
 
 // 窗口尺寸变化（旋转屏幕、调整窗口）。手机上输入框聚焦时弹出键盘只是临时遮挡，
 // 只有高度变化时不重新适配，避免地图随键盘来回跳动
-let lastWidth = innerWidth;
+// 拖动窗口时 resize 会连续触发，合并到下一帧只适配一次，避免每次事件都强制重排
+let lastWidth = innerWidth, refitFrame = 0;
 addEventListener('resize', () => {
   const widthChanged = innerWidth !== lastWidth;
   lastWidth = innerWidth;
   if (!widthChanged && document.activeElement?.matches('input, textarea')) return;
-  refit();
+  cancelAnimationFrame(refitFrame);
+  refitFrame = requestAnimationFrame(() => refit());
 });
 
 // ---------- 手机端底部面板：点击把手或上下拖动收起 / 展开 ----------

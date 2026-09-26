@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hans">
+<html lang="zh-Hans" data-view="country">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -54,9 +54,9 @@
       <button id="crumb-root" class="crumb-root">城市制霸</button>
       <span id="crumb-province" hidden><span class="sep" aria-hidden="true">›</span><button class="crumb-leaf" title="复位视图"></button></span>
     </nav>
-    <div id="search" class="search" aria-expanded="false" aria-controls="locator">
+    <div id="search" class="search">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
-      <input type="search" placeholder="搜索城市、省份或拼音" aria-label="搜索城市或省份" autocomplete="off" enterkeyhint="go">
+      <input type="search" role="combobox" aria-expanded="false" aria-controls="locator" aria-autocomplete="list" placeholder="搜索城市、省份或拼音" aria-label="搜索城市或省份" autocomplete="off" enterkeyhint="go">
     </div>
     <a id="help" class="btn icon-btn" href="about.html" aria-label="使用说明" title="使用说明">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.6 8.4a4.4 4.4 0 1 1 6.3 4c-1.1.5-1.9 1.4-1.9 2.6v.8" stroke-width="2.6"/><circle class="dot" cx="12" cy="19.6" r="1.6"/></svg>

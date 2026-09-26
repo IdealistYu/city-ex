@@ -5,6 +5,13 @@
   src: url('./fonts/cityex-sans.woff2') format('woff2');
   font-display: swap;
 }
+/* 字体下载完成前的替身：系统中文字体缩到 80%，与得意黑的字宽（0.8em）一致，换字体时文字不重新折行、面板不跳动 */
+@font-face {
+  font-family: 'CityEx Fallback';
+  src: local('PingFang SC'), local('PingFangSC-Regular'), local('Microsoft YaHei'), local('Hiragino Sans GB'),
+    local('Noto Sans CJK SC'), local('NotoSansCJKsc-Regular'), local('Noto Sans SC'), local('Source Han Sans SC');
+  size-adjust: 80%;
+}
 
 /* ============ 变量 ============ */
 :root {
@@ -29,7 +36,7 @@
   --dim: #f5f2eb;
   --dim-line: #e7e2d7;
   /* 等级颜色 --l1…--l5 由 main.js 从 levels.js 写入，只在一处定义 */
-  --font: 'CityEx Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+  --font: 'CityEx Sans', 'CityEx Fallback', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
   --panel-w: 264px;
   --gap: 16px;
   color-scheme: light;
@@ -138,7 +145,7 @@ dialog .actions { display: flex; justify-content: flex-end; gap: 8px; }
 .search svg { flex: none; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
 .search input { flex: 1; min-width: 0; border: 0; outline: none; background: none; font: inherit; color: var(--ink); }
 .search input::placeholder { color: var(--muted); }
-.search[aria-expanded="true"] { box-shadow: 0 0 0 3px var(--l3); color: var(--ink); }
+.search.open { box-shadow: 0 0 0 3px var(--l3); color: var(--ink); }
 /* 顶栏控件统一 38px 高；使用说明、GitHub 与保存图片靠右成组（间距收紧为 8px） */
 #topbar .btn { height: 38px; }
 #help { margin-left: auto; }
@@ -356,9 +363,10 @@ dialog .actions { display: flex; justify-content: flex-end; gap: 8px; }
   .crumb-root { font-size: 20px; }
   [data-view="province"] .crumb-root { font-size: 15px; }
   #crumb-province { font-size: 18px; }
-  .search { flex: none; width: 38px; padding: 0 8px; margin-left: auto; cursor: pointer; }
+  .search { position: relative; flex: none; width: 38px; padding: 0 8px; margin-left: auto; cursor: pointer; }
   #help { margin-left: 0; }
-  .search input { width: 0; }
+  /* 收起时输入框透明铺满整个按钮，点哪里都能直接聚焦（也让触控目标足够大） */
+  #topbar:not(.searching) .search input { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; }
   #topbar.searching #crumb, #topbar.searching #save, #topbar.searching #help { display: none; }
   #topbar.searching .search { flex: 1; width: auto; }
   #save { flex: none; justify-content: center; width: 38px; padding: 0; }

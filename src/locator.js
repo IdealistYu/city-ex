@@ -96,7 +96,8 @@ export const createLocator = ({ box, panel, onCity, onProvince, getActiveProvinc
     panel.style.left = narrowScreen.matches ? '' : `${box.getBoundingClientRect().left}px`;
     panel.hidden = false;
     fitHeight();
-    box.setAttribute('aria-expanded', 'true');
+    box.classList.add('open');
+    input.setAttribute('aria-expanded', 'true');
   };
   const close = () => {
     if (panel.hidden) return;
@@ -104,7 +105,8 @@ export const createLocator = ({ box, panel, onCity, onProvince, getActiveProvinc
     input.value = '';
     input.blur();
     topbar.classList.remove('searching');
-    box.setAttribute('aria-expanded', 'false');
+    box.classList.remove('open');
+    input.setAttribute('aria-expanded', 'false');
   };
 
   box.addEventListener('click', e => {
